@@ -1,0 +1,25 @@
+{
+  "exclude": ["node_modules", "dist"],
+  "include": ["./src"],
+  "files": ["./types/global.d.ts"],
+  "compilerOptions": {
+    "outDir": "dist",
+    "target": "esnext",
+    "module": "CommonJS",
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "strict": true,
+    "jsx": "react",
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "src/*": ["./src/*"]
+    },
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "strictNullChecks": true
+  }
+}

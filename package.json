@@ -1,0 +1,53 @@
+{
+  "name": "glotstack",
+  "version": "0.0.15",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "react-native": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "author": "JD Cumpson",
+  "license": "MIT",
+  "dependencies": {
+    "@eslint/js": "^9.26.0",
+    "commander": "^13.1.0",
+    "eslint": "^9.26.0",
+    "eslint-plugin-i18next": "^6.1.1",
+    "eslint-plugin-react": "^7.37.5",
+    "form-data": "^4.0.2",
+    "undici": "^7.9.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.15.17",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "globals": "^16.1.0",
+    "js-yaml": "^4.1.0",
+    "nodemon": "^3.1.10",
+    "react": "19.1.0",
+    "typescript": "5.4.4",
+    "typescript-eslint": "^8.32.1"
+  },
+  "peerDependencies": {
+    "@types/react": ">=19",
+    "@types/react-dom": ">=19",
+    "react": ">=19",
+    "react-dom": ">=19",
+    "react-native": ">=0.81"
+  },
+  "peerDependenciesMeta": {
+    "react-native": {
+      "optional": true
+    }
+  },
+  "bin": "dist/cli.js",
+  "scripts": {
+    "build": "tsc && scripts/fix-shebang.sh dist/cli.js",
+    "watch": "nodemon --watch src --ext ts,tsx,mjs,json --exec \"bash -c 'yarn build'\"",
+    "prepublishOnly": "yarn build",
+    "glotstack": "node dist/cli.js"
+  },
+  "packageManager": "yarn@4.12.0"
+}

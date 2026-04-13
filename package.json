@@ -9,6 +9,14 @@
   ],
   "author": "JD Cumpson",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jdcumpson/glotstack.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jdcumpson/glotstack/issues"
+  },
+  "homepage": "https://github.com/jdcumpson/glotstack#readme",
   "dependencies": {
     "@eslint/js": "^9.26.0",
     "commander": "^13.1.0",

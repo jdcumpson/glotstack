@@ -13,7 +13,7 @@ to fetch and extract translations for your source code.
 
 This project requires NodeJS (version 20 or later) and NPM.
 To make sure you have them available on your machine,
-try running the following command, I recommend using [asdf](https://asdf-vm.com/guide/introduction.html)
+I recommend using [asdf](https://asdf-vm.com/guide/introduction.html) if you do not have a preferred setup.
 
 ## Table of contents
 
@@ -26,6 +26,10 @@ try running the following command, I recommend using [asdf](https://asdf-vm.com/
     - [Get Translations](#get-translations)
     - [Create your source locale file](#create-your-source-locale-file)
     - [React app](#react-app)
+    - [Variable substitutions](#variable-substitutions)
+  - [Recipes](#recipes)
+  - [API](#api)
+  - [Getting Your Translations](#get-translations)
   - [Credits](#credits)
   - [Authors](#authors)
   - [License](#license)
@@ -151,11 +155,7 @@ import * as React from 'react'
 import { GlotstackProvider } from 'glotstack'
 
 const importMethod = (locale: string) => {
-  // fetch() from static directories to limit bundle sizes.
-  // If you don't care about bundling you can always do 
-  // `import(...)`
-  // your project supports dynamic imports and json files
-  return fetch(`/static/translations/${locale}.json`)
+  return import(`/static/translations/${locale}.json`)
 }
 
 const Application = () => {
@@ -168,7 +168,30 @@ const Application = () => {
 }
 ```
 
-**Note: Dynamic imports are usually better for SSR and fetch() for client side.**
+
+#### External translation file bundling
+
+If you don't want to bundle your translations into your build
+you can always build them and point Glotstack to these files
+fetching them asynchronously.
+
+Update your import method to 
+
+```tsx
+const importMethod = (locale: string) => {
+  return fetch(`/static/translations/${locale}.json`)
+}
+```
+
+And your files will be pulled at run-time. For projects
+running on Cloudflare pages this may be useful to keep the
+main bundle small. If you are using regular workers you probably
+should use the regular `import()` method above.
+
+**Note:** You will want to decide how you wnat to sign your files
+to make sure that you are not allowing script injection into
+your endpoint. This is outside of the scope of Glotstack but
+I may provide guidance on this in the future.
 
 Use the hook in your component 
 
@@ -183,8 +206,129 @@ function MyComponent() => {
 }
 ```
 
+#### Variable substitutions 
 
-## Get translations
+Glotstack allows very flexible variable substutions so you
+can render just about any React component however you like.
+
+##### Assigns
+
+In Glotstack every call to `t` (or translate) you may provide
+options that include `assigns`. You can pass any variable in
+the `assigns` that you wish to replace in the translation key.
+
+Example
+
+```json
+// en-US.json
+{"SomeKey": {
+  "value": "This is my {{substitution}}"
+}}
+```
+
+```tsx
+import {useGlotstack} from 'glotstack'
+
+const MyComponent = () => {
+  const {t} = useGlotstack()
+
+  return (
+    <div>
+      {t('SomeKey', {assigns: {substitution: 4}})}
+    </div>
+  )
+}
+```
+
+You can use any `React.Node` compatible value. Sometimes it
+may be useful to nest translations within each other - but 
+more useful is embedding other components.
+
+Example
+
+```tsx
+import {useGlotstack} from 'glotstack'
+
+const MyComponent = () => {
+  const {t} = useGlotstack()
+
+  const internalNode = <SomeOtherNode/>
+
+  return (
+    <div>
+      {t('SomeKey', {assigns: {substitution: internalNode}})}
+    </div>
+  )
+}
+```
+
+But writing internal nodes like this can become annoying
+especially if you are using components for formatting and 
+styling, so you may also provide component style substitutions
+for example
+
+Example
+
+```json
+// en-US.json
+{"SomeKey": {
+  "value": "This is my <Bold/>{{substitution}}</Bold>"
+}}
+```
+
+```tsx
+import {useGlotstack} from 'glotstack'
+
+const Bold = (props: React.PropsWithChildren) => {
+  return <div className='bold'>{props.children}</div>
+}
+
+const MyComponent = () => {
+  const {t} = useGlotstack()
+
+  return (
+    <div>
+      {t('SomeKey', {assigns: {substitution: 4, Bold }})}
+    </div>
+  )
+}
+```
+
+But you don't have to pass it just as a function component,
+ypu may pass actual nodes that will be cloned and used -- 
+be careful with this implementation for performance.
+
+Example
+
+```json
+// en-US.json
+{"SomeKey": {
+  "value": "This is my <Bold/>{{substitution}}</Bold>"
+}}
+```
+
+```tsx
+import {useGlotstack} from 'glotstack'
+
+const Bold = (props: React.PropsWithChildren) => {
+  return <div className='bold'>{props.children}</div>
+}
+
+const MyComponent = () => {
+  const {t} = useGlotstack()
+  const bold = <Bold/>
+
+  return (
+    <div>
+      {t('SomeKey', {assigns: {substitution: 4, Bold: bold }})}
+    </div>
+  )
+}
+```
+
+
+
+## Getting Your translations
 
 ```
 yarn glotstack get-translations --api-key <api-key>
@@ -194,6 +338,12 @@ Glotstack will fetch the translations defined by `outputLocales` in your config
 or `--output-locales` via CLI. You can specify `outputDir` (`--output-dir`) or
 they will be written to the same directory as `sourcePath` (`--source-path`).
 
+
+## Recipes
+
+Some useful recipes that can be used to speed up development
+
+### Standardized Formatting Assignments
 
 
 

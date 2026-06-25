@@ -7,14 +7,17 @@ export enum LogLevel {
 }
 
 const LogName = {
-  [LogLevel.DEBUG]: 'debug',
-  [LogLevel.LOG]: 'log',
-  [LogLevel.INFO]: 'info',
-  [LogLevel.WARNING]: 'warning',
-  [LogLevel.ERROR]: 'error',
+  [LogLevel.DEBUG]: "debug",
+  [LogLevel.LOG]: "log",
+  [LogLevel.INFO]: "info",
+  [LogLevel.WARNING]: "warning",
+  [LogLevel.ERROR]: "error",
 } as const
 
-const LogLevelToFunc: Record<LogLevel, (...args: Parameters<typeof console.info>) => void> = {
+const LogLevelToFunc: Record<
+  LogLevel,
+  (...args: Parameters<typeof console.info>) => void
+> = {
   [LogLevel.DEBUG]: console.debug,
   [LogLevel.INFO]: console.info,
   [LogLevel.LOG]: console.log,
@@ -37,7 +40,6 @@ const makeLoggingFunction =
     func(`[${LogName[level]}][glotstack.ai]`, ...args)
   }
 
-
 const logger = {
   debug: makeLoggingFunction(LogLevel.DEBUG),
   info: makeLoggingFunction(LogLevel.INFO),
@@ -45,4 +47,4 @@ const logger = {
   error: makeLoggingFunction(LogLevel.ERROR),
 }
 
-export default logger;
+export default logger

@@ -1,11 +1,17 @@
-import * as React from 'react'
-import { merge } from './util/object'
-import logging from './logging'
+import * as React from "react"
+import { merge } from "./util/object"
+import logging from "./logging"
 
 export { default as logger, setLogLevel, LogLevel } from "./logging"
-export { LocaleRegion, JSONArray, Translations } from './types'
+export { LocaleRegion, JSONArray, Translations } from "./types"
 
-import type { LocaleRegion, TranslateFn, TranslateOptsBase, Translations, JSONArray } from './types'
+import type {
+  LocaleRegion,
+  TranslateFn,
+  TranslateOptsBase,
+  Translations,
+  JSONArray,
+} from "./types"
 
 export interface ContextType {
   translations: Record<string, Translations>
@@ -18,29 +24,43 @@ export interface ContextType {
 
 export const GlotstackContext = React.createContext<ContextType>({
   translations: {},
-  loadTranslations: () => { throw new Error('no import method set') },
-  setLocale: (_locale: LocaleRegion) => { throw new Error('import method not set') },
+  loadTranslations: () => {
+    throw new Error("no import method set")
+  },
+  setLocale: (_locale: LocaleRegion) => {
+    throw new Error("import method not set")
+  },
   locale: null,
-  importMethod: (_locale: LocaleRegion) => { throw new Error('import method not set') },
-  t: () => { throw new Error('import method not set') },
+  importMethod: (_locale: LocaleRegion) => {
+    throw new Error("import method not set")
+  },
+  t: () => {
+    throw new Error("import method not set")
+  },
 })
 
 interface GlotstackProviderProps {
   children: React.ReactNode
   initialTranslations?: Record<string, Translations>
   initialLocale?: LocaleRegion
-  onTranslationLoaded?: (locale: LocaleRegion, translations: Translations) => void
+  onTranslationLoaded?: (
+    locale: LocaleRegion,
+    translations: Translations,
+  ) => void
   onLocaleChange?: (locale: LocaleRegion) => void
-  importMethod: ContextType['importMethod']
+  importMethod: ContextType["importMethod"]
   ssr?: boolean
 }
 
-
-export const access = (key: string, locale: LocaleRegion, translations: Translations) => {
+export const access = (
+  key: string,
+  locale: LocaleRegion,
+  translations: Translations,
+) => {
   if (translations == null) {
     return key
   }
-  const access = [...key.split('.')] as [LocaleRegion, ...string[]]
+  const access = [...key.split(".")] as [LocaleRegion, ...string[]]
   const localeTranslations = translations?.[locale]
 
   if (localeTranslations == null) {
@@ -54,7 +74,6 @@ export const access = (key: string, locale: LocaleRegion, translations: Translat
 
   return (value?.value ?? key) as string
 }
-
 
 function isAsStringTrue(
   opts: (TranslateOptsBase & { asString?: boolean }) | undefined,
@@ -97,7 +116,7 @@ function translate(
   localeRef.current = locale
   glotstack.loadTranslations(localeRef.current)
 
-  let string = ''
+  let string = ""
   if (translations != null) {
     string = access(key, locale, translations ?? {})
   }
@@ -139,11 +158,12 @@ function translate(
 
   // TODO: cache assigns as part of cache key -- otherwise multiple invocations wont work
   // if (outputRef.current[locale]![key] == null) {
-  let output: Iterable<React.ReactNode> | undefined | React.ReactNode = renderPlaceholdersToNodes(
-    string,
-    extractionsRef.current[locale]![key]!,
-    opts?.assigns ?? {},
-  )
+  let output: Iterable<React.ReactNode> | undefined | React.ReactNode =
+    renderPlaceholdersToNodes(
+      string,
+      extractionsRef.current[locale]![key]!,
+      opts?.assigns ?? {},
+    )
   outputRef.current[locale]![key] = output
   // }
 
@@ -152,10 +172,10 @@ function translate(
   if (isAsStringTrue(opts)) {
     // Convert any possible value to string safely
     output = Array.isArray(output)
-      ? output.join('')
-      : typeof output === 'string'
+      ? output.join("")
+      : typeof output === "string"
         ? output
-        : String(output ?? '')
+        : String(output ?? "")
 
     if (outputRef.current != null) {
       outputRef.current[locale]![key] = output
@@ -259,54 +279,83 @@ function createTranslate(
 //   return { t }
 // }
 
-export const GlotstackProvider = ({ children, initialLocale, initialTranslations, onLocaleChange, onTranslationLoaded, importMethod }: GlotstackProviderProps) => {
+export const GlotstackProvider = ({
+  children,
+  initialLocale,
+  initialTranslations,
+  onLocaleChange,
+  onTranslationLoaded,
+  importMethod,
+}: GlotstackProviderProps) => {
   if (initialLocale == null) {
-    throw new Error('initialLocale must be set')
+    throw new Error("initialLocale must be set")
   }
   const [locale, setLocale] = React.useState<LocaleRegion>(initialLocale)
-  const translationsRef = React.useRef<Record<string, Translations> | null>(initialTranslations || null)
+  const translationsRef = React.useRef<Record<string, Translations> | null>(
+    initialTranslations || null,
+  )
   const accessedRef = React.useRef<Record<string, Record<string, string>>>({})
-  const outputRef = React.useRef<Record<string, Record<string, React.ReactNode>>>({})
-  const extractionsRef = React.useRef<Record<string, Record<string, ParsedSimplePlaceholder[]>>>({})
+  const outputRef = React.useRef<
+    Record<string, Record<string, React.ReactNode>>
+  >({})
+  const extractionsRef = React.useRef<
+    Record<string, Record<string, ParsedSimplePlaceholder[]>>
+  >({})
   const loadingRef = React.useRef<Record<string, Promise<Translations>>>({})
-  const localeRef = React.useRef<string>('en-US')
+  const localeRef = React.useRef<string>("en-US")
   const optionsRef = React.useRef<Record<string, any>>({})
-  const [translations, setTranslations] = React.useState(translationsRef.current)
+  const [translations, setTranslations] = React.useState(
+    translationsRef.current,
+  )
 
-  const loadTranslations = React.useCallback(async (locale: string, opts?: { force?: boolean }) => {
-    // TODO: if translations are loaded only reload if some condition is
-    try {
-      if (loadingRef.current?.[locale] != null && opts?.force != true) {
-        logging.debug('Waiting for translations already loading', locale, loadingRef.current)
-        return (await loadingRef.current?.[locale])
-      }
-      if (translationsRef.current?.[locale] != null && opts?.force != true) {
-        logging.debug('Skipping load for translations', locale, translationsRef.current?.[locale], translationsRef.current)
-        return translationsRef.current?.[locale]
-      }
-      if (loadingRef.current != null) {
-        loadingRef.current[locale] = importMethod(locale)
-        logging.debug('Loading translations', locale)
-      }
-      const result = await loadingRef.current[locale]
+  const loadTranslations = React.useCallback(
+    async (locale: string, opts?: { force?: boolean }) => {
+      // TODO: if translations are loaded only reload if some condition is
+      try {
+        if (loadingRef.current?.[locale] != null && opts?.force != true) {
+          logging.debug(
+            "Waiting for translations already loading",
+            locale,
+            loadingRef.current,
+          )
+          return await loadingRef.current?.[locale]
+        }
+        if (translationsRef.current?.[locale] != null && opts?.force != true) {
+          logging.debug(
+            "Skipping load for translations",
+            locale,
+            translationsRef.current?.[locale],
+            translationsRef.current,
+          )
+          return translationsRef.current?.[locale]
+        }
+        if (loadingRef.current != null) {
+          loadingRef.current[locale] = importMethod(locale)
+          logging.debug("Loading translations", locale)
+        }
+        const result = await loadingRef.current[locale]
 
-      if (result == null) {
-        throw new Error(`Failed to load translation ${locale} ${JSON.stringify(result)}`)
-      }
-      if (translationsRef.current) {
-        translationsRef.current[locale] = result
-      } else {
-        translationsRef.current = { [locale]: result }
-      }
+        if (result == null) {
+          throw new Error(
+            `Failed to load translation ${locale} ${JSON.stringify(result)}`,
+          )
+        }
+        if (translationsRef.current) {
+          translationsRef.current[locale] = result
+        } else {
+          translationsRef.current = { [locale]: result }
+        }
 
-      setTranslations({ ...translationsRef.current })
-      onTranslationLoaded?.(locale, result)
-      return result
-    } catch (err) {
-      logging.error('Unable to import translations', err)
-      throw err
-    }
-  }, [importMethod, onTranslationLoaded])
+        setTranslations({ ...translationsRef.current })
+        onTranslationLoaded?.(locale, result)
+        return result
+      } catch (err) {
+        logging.error("Unable to import translations", err)
+        throw err
+      }
+    },
+    [importMethod, onTranslationLoaded],
+  )
 
   React.useEffect(() => {
     const run = async () => {
@@ -325,13 +374,13 @@ export const GlotstackProvider = ({ children, initialLocale, initialTranslations
       locale,
       importMethod,
       loadTranslations,
-      t: () => '',
+      t: () => "",
     }
     localeRef.current = locale
 
     const t = createTranslate(
       context,
-      context.locale ?? 'en-US',
+      context.locale ?? "en-US",
       context.translations ?? {},
       localeRef,
       accessedRef,
@@ -341,12 +390,13 @@ export const GlotstackProvider = ({ children, initialLocale, initialTranslations
 
     context.t = t
     return context
-
   }, [locale, importMethod, loadTranslations, translations])
 
-  return <GlotstackContext.Provider value={context}>
-    {children}
-  </GlotstackContext.Provider>
+  return (
+    <GlotstackContext.Provider value={context}>
+      {children}
+    </GlotstackContext.Provider>
+  )
 }
 
 export const useGlotstack = () => {
@@ -358,19 +408,21 @@ export const useTranslations = (_options?: Record<never, never>) => {
   return context
 }
 
-
 export type ParsedSimplePlaceholder = {
   key: string
   options: string[]
   raw: string
   index: number
-  kind: 'doubleCurly' | 'component'
+  kind: "doubleCurly" | "component" | "noTranslate"
 }
 
 const curlyRegex = /(?<!\\)({{\s*([a-zA-Z0-9_]+)\s*(?:,\s*([^{}]*?))?\s*}})/g
 const componentRegex = /<([A-Z][a-zA-Z0-9]*)>([\s\S]*?)<\/\1>/g
+const noTranslateRegex = /(?<!\\)(\[no-translate:([^\]]+)\])/g
 
-export function extractSimplePlaceholders(input: string): ParsedSimplePlaceholder[] {
+export function extractSimplePlaceholders(
+  input: string,
+): ParsedSimplePlaceholder[] {
   const results: ParsedSimplePlaceholder[] = []
 
   for (const match of input.matchAll(curlyRegex)) {
@@ -380,10 +432,13 @@ export function extractSimplePlaceholders(input: string): ParsedSimplePlaceholde
     const index = match.index ?? -1
 
     const options = rawOptions
-      ? rawOptions.split(',').map(opt => opt.trim()).filter(Boolean)
+      ? rawOptions
+          .split(",")
+          .map((opt) => opt.trim())
+          .filter(Boolean)
       : []
 
-    results.push({ key, options, raw, index, kind: 'doubleCurly' })
+    results.push({ key, options, raw, index, kind: "doubleCurly" })
   }
 
   for (const match of input.matchAll(componentRegex)) {
@@ -391,7 +446,15 @@ export function extractSimplePlaceholders(input: string): ParsedSimplePlaceholde
     const key = match[1]
     const index = match.index ?? -1
 
-    results.push({ key, options: [], raw, index, kind: 'component' })
+    results.push({ key, options: [], raw, index, kind: "component" })
+  }
+
+  for (const match of input.matchAll(noTranslateRegex)) {
+    const raw = match[1]
+    const key = match[2]
+    const index = match.index ?? -1
+
+    results.push({ key, options: [], raw, index, kind: "noTranslate" })
   }
 
   return results.sort((a, b) => a.index - b.index)
@@ -402,7 +465,7 @@ type Renderer = (props: { children: React.ReactNode }) => React.ReactNode
 export function renderPlaceholdersToNodes(
   input: string,
   placeholders: ParsedSimplePlaceholder[],
-  assigns: Record<string, React.ReactNode | Renderer>
+  assigns: Record<string, React.ReactNode | Renderer>,
 ): React.ReactNode[] {
   const nodes: React.ReactNode[] = []
   let cursor = 0
@@ -416,7 +479,7 @@ export function renderPlaceholdersToNodes(
     }
     let value: React.ReactNode = raw
 
-    if (kind === 'component') {
+    if (kind === "component") {
       const Render = assigns[key]
       const openTag = `<${key}>`
       const closeTag = `</${key}>`
@@ -429,10 +492,11 @@ export function renderPlaceholdersToNodes(
 
       if (React.isValidElement(Render)) {
         value = React.cloneElement(Render, {}, children)
-      } else if (typeof Render === 'function') {
+      } else if (typeof Render === "function") {
         value = <Render>{children}</Render>
       } else {
-        logging.warn(`Invalid assign substitution for:\n\n  ${raw}\n\nDid you remember to pass assigns?\n`,
+        logging.warn(
+          `Invalid assign substitution for:\n\n  ${raw}\n\nDid you remember to pass assigns?\n`,
           `
 t('key', { assigns: {
   ${key}: <something />  // children will be copied via React.cloneElement
@@ -440,12 +504,14 @@ t('key', { assigns: {
 t('key', { assigns: {
   ${key}: MyComponent  // component will be rendered with <Component/>
 }})\n
-`
+`,
         )
       }
-    } else if (kind === 'doubleCurly') {
+    } else if (kind === "doubleCurly") {
       const Render = assigns[key]
-      value = typeof Render !== 'function' ? Render : raw ?? raw
+      value = typeof Render !== "function" ? Render : (raw ?? raw)
+    } else if (kind === "noTranslate") {
+      value = key
     }
     nodes.push(value)
     cursor = index + raw.length
@@ -455,11 +521,16 @@ t('key', { assigns: {
     nodes.push(input.slice(cursor))
   }
 
-  // Unescape \{{...}} to {{...}}, and wrap ReactNodes
+  // Unescape \{{...}} to {{...}} and \[no-translate:...] to [no-translate:...],
+  // then wrap ReactNodes. Unescaped no-translate directives render as their inner text.
   return nodes.map((node, i) =>
-    typeof node === 'string'
-      ? node.replace(/\\({{[^{}]+}})/g, '$1')
-      : <React.Fragment key={i}>{node}</React.Fragment>
+    typeof node === "string" ? (
+      node
+        .replace(/\\({{[^{}]+}})/g, "$1")
+        .replace(/\\(\[no-translate:[^\]]+\])/g, "$1")
+    ) : (
+      <React.Fragment key={i}>{node}</React.Fragment>
+    ),
   )
 }
 
@@ -505,10 +576,12 @@ t('key', { assigns: {
 //   )
 // }
 
-
-
-
-export function useRenderPlaceholdersToNodes(...args: Parameters<typeof renderPlaceholdersToNodes>) {
-  const nodes = React.useMemo(() => renderPlaceholdersToNodes(...args), [...args])
+export function useRenderPlaceholdersToNodes(
+  ...args: Parameters<typeof renderPlaceholdersToNodes>
+) {
+  const nodes = React.useMemo(
+    () => renderPlaceholdersToNodes(...args),
+    [...args],
+  )
   return nodes
 }

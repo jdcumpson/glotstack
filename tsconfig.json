@@ -1,9 +1,10 @@
 {
   "exclude": ["node_modules", "dist"],
-  "include": ["./src"],
-  "files": ["./types/global.d.ts"],
+  "include": ["./src/**/*", "types/**/*"],
   "compilerOptions": {
-    "outDir": "dist",
+    "types": ["node"],
+    "outDir": "./dist",
+    "rootDir": "./src",
     "target": "esnext",
     "module": "CommonJS",
     "declaration": true,
@@ -11,7 +12,6 @@
     "strict": true,
     "jsx": "react",
     "sourceMap": true,
-    "baseUrl": ".",
     "paths": {
       "src/*": ["./src/*"]
     },

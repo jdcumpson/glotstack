@@ -1,7 +1,6 @@
 export interface JSONArray extends Array<JSONValue> {}
 export type LocaleRegion = string
 
-
 export interface TranslationLeaf {
   value: string
   context?: string

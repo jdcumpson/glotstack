@@ -68,9 +68,9 @@ Yaml is preferred because it's a config language that allows comments.
 # .glotstack.yaml
 
 # path to where you will keep your translation files
-sourcePath: './domains/application/translations'
+sourceDir: './domains/application/translations'
 
-# [optional] where to output the files to if not the same as sourcePath - this is usually not necessary
+# [optional] where to output the files to if not the same as sourceDir - this is usually not necessary
 outputDir: './domains/application/translations'
 
 # what locales you want to get translations for
@@ -105,7 +105,7 @@ You can use `en-US.json` or `en-US.yaml` files as source translation files. Inte
 Glotstack uses YAML because it allows comments and is nice (once you get used to it).
 
 In your folder of choice (usually somewhere in your `src`) add your `en-US.json` or `en-US.yaml`
-files, you will need it to match `sourcePath` in your config or `--source-path` when using CLI.
+files, you will need it to match `sourceDir` in your config or `--source-path` when using CLI.
 
 The source file will not be translated and should contain your translations in the following format:
 
@@ -336,7 +336,7 @@ yarn glotstack get-translations --api-key <api-key>
 
 Glotstack will fetch the translations defined by `outputLocales` in your config
 or `--output-locales` via CLI. You can specify `outputDir` (`--output-dir`) or
-they will be written to the same directory as `sourcePath` (`--source-path`).
+they will be written to the same directory as `sourceDir` (`--source-path`).
 
 
 ## Recipes

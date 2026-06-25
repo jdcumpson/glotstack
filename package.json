@@ -18,19 +18,20 @@
   },
   "homepage": "https://github.com/jdcumpson/glotstack#readme",
   "dependencies": {
-    "@eslint/js": "^9.26.0",
     "commander": "^13.1.0",
-    "eslint": "^9.26.0",
-    "eslint-plugin-i18next": "^6.1.1",
-    "eslint-plugin-react": "^7.37.5",
     "form-data": "^4.0.2",
     "undici": "^7.9.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.26.0",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^22.15.17",
+    "@types/node": "20",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "esbuild": "^0.28.1",
+    "eslint": "^9.26.0",
+    "eslint-plugin-i18next": "^6.1.1",
+    "eslint-plugin-react": "^7.37.5",
     "globals": "^16.1.0",
     "js-yaml": "^4.1.0",
     "nodemon": "^3.1.10",
@@ -39,20 +40,20 @@
     "typescript-eslint": "^8.32.1"
   },
   "peerDependencies": {
-    "@types/react": ">=19",
-    "@types/react-dom": ">=19",
-    "react": ">=19",
-    "react-dom": ">=19",
-    "react-native": ">=0.81"
+    "@types/react": "*",
+    "@types/react-dom": "*",
+    "react": "*",
+    "react-dom": "*",
+    "react-native": "*"
   },
   "peerDependenciesMeta": {
     "react-native": {
       "optional": true
     }
   },
-  "bin": "dist/cli.js",
+  "bin": "./dist/cli.js",
   "scripts": {
-    "build": "tsc && scripts/fix-shebang.sh dist/cli.js",
+    "build": "tsc && esbuild src/cli.tsx --bundle --platform=node --packages=external --target=node20 --outfile=dist/cli.js && scripts/fix-shebang.sh dist/cli.js",
     "watch": "nodemon --watch src --ext ts,tsx,mjs,json --exec \"bash -c 'yarn build'\"",
     "prepublishOnly": "yarn build",
     "glotstack": "node dist/cli.js"
